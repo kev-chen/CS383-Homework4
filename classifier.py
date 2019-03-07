@@ -2,43 +2,16 @@
 
 import numpy
 import math
-
-data = []
-mean = []
-stdDev = []
-D = 0
-
-def readData():
-    global data
-    dataFile = open("spambase.data", "r")
-
-    for line in dataFile:
-        split = line.split(',')
-        data.append(split)
-    
-    data = numpy.array(data).astype(float)
-    dataFile.close()
-
-def standardize(matrix):
-    global mean
-    global stdDev
-    a = numpy.array(matrix).astype(float)
-    mean = numpy.tile(numpy.mean(a, axis=0), (len(matrix),1))
-    stdDev = numpy.tile(numpy.std(a, axis=0), (len(matrix),1))
-
-    d = numpy.subtract(a, mean)
-    d = numpy.divide(d, stdDev)
-
-    return d
+from util import readData
+from util import standardize
 
 
 def likelihood(mean, std, feature):
     return (1/(std * math.sqrt(2*math.pi))) * (math.exp(-(((feature - mean) ** 2) / (2 * (std ** 2)))))
 
 def main():
-    global D
     # Read in Data
-    readData()
+    data = readData("spambase.data")
     
     # Randomizes the data
     numpy.random.seed(0)
@@ -58,41 +31,39 @@ def main():
     Y_testing = Y[index+1:]
 
     # Divide training data into two groups
-    spam = []
-    nonSpam = []
+    positive = []
+    negative = []
     for i in range(0, len(training)):
         if Y[i] == 1: # spam
-            spam.append(training[i])
+            positive.append(training[i])
         else:
-            nonSpam.append(training[i])
-    spam = numpy.array(spam).astype(float)
-    nonSpam = numpy.array(nonSpam).astype(float)
+            negative.append(training[i])
+    positive = numpy.array(positive).astype(float)
+    negative = numpy.array(negative).astype(float)
 
     # Compute models for spam
-    spam_model = []
+    positive_model = []
     for k in range(0, D):
-        spam_model.append((numpy.mean(spam[:,k]), numpy.std(spam[:,k])))
+        positive_model.append((numpy.mean(positive[:,k]), numpy.std(positive[:,k])))
 
-
-    # Compute models for nonSpam
-    nonSpam_model = []
+    # Compute models for non-spam
+    negative_model = []
     for k in range(0,D):
-        nonSpam_model.append((numpy.mean(nonSpam[:, k]), numpy.std(nonSpam[:, k])))
+        negative_model.append((numpy.mean(negative[:, k]), numpy.std(negative[:, k])))
 
     # Classify testing samples
     result = []
     for sample in testing:
-        p_spam = float(len(spam)) / len(spam) + len(nonSpam)
-        p_nonSpam = float(len(nonSpam)) / len(spam) + len(nonSpam)
+        p_positive = float(len(positive)) / len(positive) + len(negative)
+        p_negative = float(len(negative)) / len(positive) + len(negative)
         for k in range(0, D):
-            p_spam *= likelihood(spam_model[k][0], spam_model[k][1], sample[k])
-            p_nonSpam *= likelihood(nonSpam_model[k][0], nonSpam_model[k][1], sample[k])
+            p_positive *= likelihood(positive_model[k][0], positive_model[k][1], sample[k])
+            p_negative *= likelihood(negative_model[k][0], negative_model[k][1], sample[k])
         
-        if p_spam > p_nonSpam:
+        if p_positive > p_negative:
             result.append(1)
         else:
             result.append(0)
-
     
     # Compute statistics
     TruePositives = 0.0

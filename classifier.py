@@ -2,8 +2,7 @@
 
 import numpy
 import math
-from util import readData
-from util import standardize
+from util import readData, standardize, randomize
 
 
 def likelihood(mean, std, feature):
@@ -14,9 +13,7 @@ def main():
     data = readData("spambase.data")
     
     # Randomizes the data
-    numpy.random.seed(0)
-    X = data 
-    numpy.random.shuffle(X)
+    X = randomize(data)
     Y = X[:,-1] # Only the last column
     X = X[:,:-1] # All but the last column
     D = len(X[0])

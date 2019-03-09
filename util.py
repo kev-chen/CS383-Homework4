@@ -30,3 +30,7 @@ def standardize(matrix):
     data = numpy.divide(data, stdDev)
 
     return data
+
+def randomize(data):
+    numpy.random.seed(0)
+    return numpy.random.permutation(data)
